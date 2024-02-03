@@ -4,9 +4,9 @@ const storage = multer.diskStorage({
     cb(null, "./public/temp");
   },
   filename: function (req, file, cb) {
-    // console.log(file);
+    console.log("fileName: " + file.originalname);
     cb(null, file.originalname);
   },
 });
 
-export const upload = multer({ storage: storage });
+export const uploadLocally = multer({ storage: storage });

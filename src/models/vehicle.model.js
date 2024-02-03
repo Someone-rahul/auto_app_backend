@@ -6,28 +6,21 @@
 // BillbookImage:string(cloudinaryUrl)
 
 import mongoose, { Schema } from "mongoose";
-const vehicleSchema = new Schema(
-  {
-    driverId: {
-      type: Schema.Types.ObjectId,
-      ref: "Driver",
-    },
-    numberPlate: {
-      type: String,
-      required: true,
-    },
-    color: {
-      type: String,
-    },
-    vehicleImage: {
-      type: String, // cloudinary url
-      required: true,
-    },
-    billBookImage: {
-      type: String, //cloudinary url
-      required: true,
-    },
+const vehicleSchema = new Schema({
+  numberPlate: {
+    type: String,
+    required: true,
   },
-  { timestamps: true }
-);
+  color: {
+    type: String,
+  },
+  vehicleImage: {
+    type: String, // cloudinary url
+    required: true,
+  },
+  billBookImage: {
+    type: String, //cloudinary url
+    required: true,
+  },
+});
 export const Vehicle = mongoose.model("Vehicle", vehicleSchema);

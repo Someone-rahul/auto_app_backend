@@ -10,7 +10,7 @@ const getAll = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
   const skip = (page - 1) * limit;
 
-  const drivers = await Driver.aggregate([
+  const list = await Driver.aggregate([
     { $skip: skip },
     { $limit: parseInt(limit) },
     {
@@ -79,21 +79,21 @@ const getAll = asyncHandler(async (req, res) => {
   const totalDrivers = await Driver.countDocuments();
 
   const totalPages = Math.ceil(totalDrivers / limit);
-  if (drivers) {
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        drivers,
-        {
-          totalItem: totalDrivers,
-          currentPageNumber: parseInt(page),
-          totalPage: totalPages,
-          nextPageNumber: page < totalPages ? parseInt(page) + 1 : null,
-          previousPageNumber: page > 1 ? parseInt(page) - 1 : null,
-        },
-        "Driver data is fetched successfully"
-      )
-    );
+  const pagination = {
+    totalItem: totalDrivers,
+    currentPageNumber: parseInt(page),
+    totalPage: totalPages,
+    nextPageNumber: page < totalPages ? parseInt(page) + 1 : null,
+    previousPageNumber: page > 1 ? parseInt(page) - 1 : null,
+  };
+  const data = {
+    list,
+    pagination,
+  };
+  if (list) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, data, "Driver data is fetched successfully"));
   } else {
     console.error(err);
     return res

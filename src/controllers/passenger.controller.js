@@ -8,7 +8,7 @@ const getAllPassenger = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
   const skip = (page - 1) * limit;
 
-  const allPassenger = await User.aggregate([
+  const list = await User.aggregate([
     { $skip: skip },
     { $limit: parseInt(limit) },
     {
@@ -19,25 +19,25 @@ const getAllPassenger = asyncHandler(async (req, res) => {
   ]);
   const totalPassengers = await User.countDocuments({ userRole: "passenger" });
   const totalPages = Math.ceil(totalPassengers / limit);
-  if (!allPassenger) {
+  if (!list) {
     console.error(err);
     return res
       .status(500)
       .json({ success: false, message: "Error while fetching driver info" });
   }
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      allPassenger,
-      {
-        totalItem: totalPassengers,
-        currentPageNumber: parseInt(page),
-        totalPage: totalPages,
-        nextPageNumber: page < totalPages ? parseInt(page) + 1 : null,
-        previousPageNumber: page > 1 ? parseInt(page) - 1 : null,
-      },
-      "All passenger fetched successfully"
-    )
-  );
+  const pagination = {
+    totalItem: totalPassengers,
+    currentPageNumber: parseInt(page),
+    totalPage: totalPages,
+    nextPageNumber: page < totalPages ? parseInt(page) + 1 : null,
+    previousPageNumber: page > 1 ? parseInt(page) - 1 : null,
+  };
+  const data = {
+    list,
+    pagination,
+  };
+  return res
+    .status(200)
+    .json(new ApiResponse(200, data, "All passenger fetched successfully"));
 });
 export { getAllPassenger };

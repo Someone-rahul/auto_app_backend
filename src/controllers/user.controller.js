@@ -27,6 +27,7 @@ const generateAccessAndRefreshToken = async (userId) => {
 
 //driver register endpoint (http://localhost:8000/api/v1/users/register/driver)
 const registerDriver = asyncHandler(async (req, res) => {
+  console.log("request:", req);
   //getting user details from frontend
   const {
     firstName,
@@ -125,20 +126,19 @@ const registerDriver = asyncHandler(async (req, res) => {
       "Something went wrong while registering new driver"
     );
   }
-  const combinedUser = {
-    createdUser,
-    createdDriver,
-    createdVehicle,
-  };
   //sending the resoponse
   return res
     .status(201)
-    .json(new ApiResponse(200, combinedUser, "User registered successfully"));
+    .json(
+      new ApiResponse(200, createdUser._id, "User registered successfully")
+    );
 });
 
 //passenger register endpoint (http://localhost:8000/api/v1/users/register/passenger)
 const registerPassenger = asyncHandler(async (req, res) => {
   //getting user details from frontend
+  console.log("from register passenger", req);
+  console.log("file: ", req.file);
   const { firstName, lastName, address, phoneNumber, userRole, password } =
     req.body;
 
@@ -156,9 +156,6 @@ const registerPassenger = asyncHandler(async (req, res) => {
   if (existedUser) {
     throw new ApiError(409, `user already exist with these credential`);
   }
-  // console.log("existed user: ", existedUser);
-  // console.log(req.file.path);
-  // console.log("user controller: ", req.files?.userImage[0]?.path);
   const userImageLocalpath = req.file?.path;
   if (!userImageLocalpath) {
     throw new ApiError(400, "User image is required");
@@ -196,18 +193,19 @@ const registerPassenger = asyncHandler(async (req, res) => {
   //sending the resoponse
   return res
     .status(201)
-    .json(new ApiResponse(200, createdUser, "User registered successfully"));
+    .json(
+      new ApiResponse(200, createdUser._id, "User registered successfully")
+    );
 });
 
-//login user
 const loginUser = asyncHandler(async (req, res) => {
-  //getting data from client
+  console.log(req);
   const { phoneNumber, password } = req.body;
-  //empty validation
+  console.log(phoneNumber, password);
   if (!phoneNumber && !password) {
     throw new ApiError("phone number or password is required");
   }
-  // console.log("login credentieals: ", phoneNumber, password);
+  // console.log("login credentieals: ", phone, password);
 
   //check if the phone number exist or not
   const user = await User.findOne({ phoneNumber });
@@ -217,14 +215,11 @@ const loginUser = asyncHandler(async (req, res) => {
       `User with ${phoneNumber} does not exist, please register first`
     );
   }
-  // console.log("user :", user);
-  //check password
   const isPasswordValid = await user.isPasswordCorrect(password);
 
   if (!isPasswordValid) {
     throw new ApiError(401, "Password is incorrect");
   }
-  // console.log("is password valid: ", isPasswordValid);
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     user._id
   );
@@ -232,11 +227,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const loggedInUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
-  // console.log("logged in user :", loggedInUser);
 
-  //sending access token in cookie
-  //after adding this option true then cookie can not be modified by the client side
-  // so we must need to set these options true while sending cookie
   const options = {
     httpOnly: true,
     secure: true,
@@ -279,17 +270,23 @@ const logoutUser = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User Logged out successfully"));
 });
-const findByPhoneNumber = asyncHandler(async (req, res) => {
-  const { phoneNumber } = req.body;
-  if (!phoneNumber) {
-    throw new ApiError(404, "Phone number not found");
+const findByPhoneNumber = asyncHandler(async (req, res, next) => {
+  try {
+    const { phoneNumber } = req.params;
+    if (!phoneNumber) {
+      throw new ApiError(403, "Phone number not found");
+    }
+    const user = await User.findOne({ phoneNumber }).select("phoneNumber");
+    console.log(user);
+    if (user) {
+      throw new ApiError(400, `User with ${phoneNumber} already exist `);
+    }
+    return res
+      .status(200)
+      .json(new ApiResponse(200, user, "User is not exist"));
+  } catch (error) {
+    next(error);
   }
-  const user = await User.findOne({ phoneNumber }).select("phoneNumber");
-  console.log(user);
-  if (user) {
-    throw new ApiError(400, "User already exist exist");
-  }
-  return res.status(200).json(new ApiResponse(200, user, "User is not exist"));
 });
 export {
   registerDriver,

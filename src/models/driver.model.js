@@ -33,5 +33,9 @@ const driverSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  ratings: {
+    type: Number,
+    default: 5,
+  },
 });
 export const Driver = mongoose.model("Driver", driverSchema);

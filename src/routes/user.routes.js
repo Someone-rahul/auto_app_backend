@@ -15,6 +15,7 @@ import {
 } from "../controllers/driver.controller.js";
 import { getAllPassenger } from "../controllers/passenger.controller.js";
 import { handleError } from "../middlewares/errorHandling.middleware.js";
+import { addBlog } from "../controllers/blog.controller.js";
 
 const router = Router();
 
@@ -55,4 +56,17 @@ router.route("/driver/get").get(getAll);
 router.route("/passenger/get").get(getAllPassenger);
 router.route("/driver/:id").get(getById);
 router.route("/verifyDriver/:id").get(verifyDriver);
+router.route("/addBlog").post(
+  uploadLocally.fields([
+    {
+      name: "blogImage",
+      maxCount: 1,
+    },
+    {
+      name: "blogVideo",
+      maxCount: 1,
+    },
+  ]),
+  addBlog
+);
 export default router;
